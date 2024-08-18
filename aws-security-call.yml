@@ -206,7 +206,6 @@ Resources:
       FunctionName: !GetAtt MyLambdaFunction.Arn
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt MyEventBridgeRule.Arn
-      MaximumRetryAttempts: 0
 
   # EventBridge Rule for specific severity GuardDuty findings
   MyEventBridgeRule:
