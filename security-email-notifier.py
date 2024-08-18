@@ -13,7 +13,7 @@ def lambda_handler(event, context):
     region = event.get('detail', {}).get('region', 'N/A')
     title = event.get('detail', {}).get('title', 'N/A')
     finding_type = event.get('detail', {}).get('type', 'N/A')
-    time = event.get('detail', {}).get('updatedAt', 'N/A')
+    event_time = event.get('detail', {}).get('updatedAt', 'N/A')
     
     # This is the message sent to emails
     message = (
@@ -22,7 +22,7 @@ def lambda_handler(event, context):
         "Region: " + region + "\n"
         "Title: " + title + "\n"
         "Type: " + finding_type + "\n"
-        "Updated At: " + time + "\n"
+        "Updated At: " + event_time + "\n"
     )
     
     sns_client = boto3.client('sns')
