@@ -79,15 +79,13 @@ Resources:
             Version: "2012-10-17"
             Statement:
               - Effect: "Allow"
-                Action: 
-                  - "logs:CreateLogGroup"
-                Resource: "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
-              - Effect: "Allow"
                 Action:
+                  - "logs:CreateLogGroup"
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: 
                   - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}:*"
+
         - PolicyName: LambdaSNSPolicy
           PolicyDocument:
             Version: "2012-10-17"
@@ -96,6 +94,7 @@ Resources:
                 Action:
                   - "sns:Publish"
                 Resource: "arn:aws:sns:*:*:*"
+
         - PolicyName: LambdaS3Policy
           PolicyDocument:
             Version: "2012-10-17"
@@ -106,8 +105,9 @@ Resources:
                   - "s3:PutObject"
                   - "s3:ListBucket"
                 Resource:
-                  - "arn:aws:s3:::${MyS3Bucket}"
-                  - "arn:aws:s3:::${MyS3Bucket}/*"
+                  - !Sub "arn:aws:s3:::${MyS3Bucket}"
+                  - !Sub "arn:aws:s3:::${MyS3Bucket}/*"
+
         - PolicyName: LambdaPollyConnectPolicy
           PolicyDocument:
             Version: "2012-10-17"
@@ -130,7 +130,8 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: 
-                  - "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/connect/*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/connect/*"
+
 
   # Lambda function creation with the proper environment variables
   MyLambdaFunction:
