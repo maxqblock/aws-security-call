@@ -11,12 +11,16 @@ Parameters:
   SecurityPhoneNumber:
     Type: String
     Description: The security contact phone number that will be called.
+    AllowedPattern: ^\+\d{11,15}$
+    ConstraintDescription: "Phone number must be in the format +12345678901 with the + symbol included"
   ContactFlowId:
     Type: String
     Description: The Contact Flow ID from Amazon Connect.
   ConnectPhoneNumber:
     Type: String
-    Description: The source phone number from Amazon Connect.
+    Description: The source phone number from Amazon Connect. 
+    AllowedPattern: ^\+\d{11,15}$
+    ConstraintDescription: "Phone number must be in the format +12345678901 with the + symbol included"
   EmailAddress:
     Type: String
     Description: The security contact email address to receive SNS notifications.
@@ -61,7 +65,7 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: 
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${MyLambdaFunction}:*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/*:*"
 
         - PolicyName: GuardDutyLambdaSNSPolicy
           PolicyDocument:
@@ -70,7 +74,7 @@ Resources:
               - Effect: "Allow"
                 Action:
                   - "sns:Publish"
-                Resource: !GetAtt MySNSTopic.Arn
+                Resource: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:*"
 
         - PolicyName: GuardDutyLambdaConnectPolicy
           PolicyDocument:
@@ -85,6 +89,7 @@ Resources:
                   - "connect:GetContactAttributes"
                 Resource: 
                   - !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${ConnectInstanceId}/*"
+              - Effect: "Allow"
                 Action:
                   - "logs:CreateLogGroup"
                   - "logs:CreateLogStream"
@@ -169,9 +174,7 @@ Resources:
                       'messageToRead': message_spoken
                   }
               )
-              
-              print(response)
-              
+                  
               return {
                   'statusCode': 200,
                   'body': json.dumps('Called')
@@ -203,6 +206,7 @@ Resources:
       FunctionName: !GetAtt MyLambdaFunction.Arn
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt MyEventBridgeRule.Arn
+      MaximumRetryAttempts: 0
 
   # EventBridge Rule for specific severity GuardDuty findings
   MyEventBridgeRule:

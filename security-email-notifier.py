@@ -64,9 +64,7 @@ def lambda_handler(event, context):
             'messageToRead': message_spoken
         }
     )
-    
-    print(response)
-    
+        
     return {
         'statusCode': 200,
         'body': json.dumps('Called')
