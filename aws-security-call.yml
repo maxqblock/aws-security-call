@@ -10,7 +10,7 @@ Description: >
 Parameters:
   SecurityPhoneNumber:
     Type: String
-    Description: The phone number to call via Amazon Connect.
+    Description: The security contact phone number to call via Amazon Connect.
   ContactFlowId:
     Type: String
     Description: The Contact Flow ID for Amazon Connect.
@@ -19,7 +19,7 @@ Parameters:
     Description: The source phone number for Amazon Connect.
   EmailAddress:
     Type: String
-    Description: The email address to receive SNS notifications.
+    Description: The security contact email address to receive SNS notifications.
   ConnectInstanceId:
     Type: String
     Description: The ID of the Amazon Connect instance.
