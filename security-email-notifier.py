@@ -4,7 +4,6 @@
 
 import json
 import boto3
-import time
 import os
 
 def lambda_handler(event, context):
@@ -47,29 +46,7 @@ def lambda_handler(event, context):
         f"Please take action, thank you!"
     )
     
-    polly_client = boto3.client('polly')
-    
-    response = polly_client.synthesize_speech(
-        Text=message_spoken,
-        OutputFormat='mp3',
-        VoiceId='Joanna'
-    )
-    
-    mp3_file_path = '/tmp/output.mp3'
-    with open('/tmp/output.mp3', 'wb') as file:
-        file.write(response['AudioStream'].read())
-    
-    # Upload the mp3 file to a S3 bucket
-    s3_client = boto3.client('s3')
-    bucket_name = os.environ['S3_BUCKET_NAME']
-    s3_key = 'output.mp3'
-    s3_client.upload_file(mp3_file_path, bucket_name, s3_key)
-
-    time.sleep(30)  
-    
     connect_client = boto3.client('connect')
-    
-    s3_url = f"https://s3.amazonaws.com/{bucket_name}/{s3_key}"
 
     # These are environment variables for Amazon Connect
     destination_phone_number = os.environ['DESTINATION_PHONE_NUMBER']
@@ -84,9 +61,11 @@ def lambda_handler(event, context):
         InstanceId=instance_id, 
         SourcePhoneNumber=source_phone_number,      
         Attributes={
-            's3AudioUrl': s3_url
+            'messageToRead': message_spoken
         }
     )
+    
+    print(response)
     
     return {
         'statusCode': 200,
@@ -100,4 +79,3 @@ def convert_number_to_words(number):
         '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine'
     }
     return ' '.join(number_map[digit] for digit in str(number))
-

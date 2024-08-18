@@ -39,29 +39,6 @@ Resources:
       Protocol: email
       Endpoint: !Ref EmailAddress
 
-  # S3 bucket to store MP3 files used in call
-  MyS3Bucket:
-    Type: AWS::S3::Bucket
-
-  MyS3BucketPolicy:
-    Type: AWS::S3::BucketPolicy
-    Properties:
-      Bucket: !Ref MyS3Bucket
-      PolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Sid: "AllowConnectInstanceAccess"
-            Effect: "Allow"
-            Principal:
-              Service: "connect.amazonaws.com"
-            Action: "s3:GetObject"
-            Resource: !Sub "arn:aws:s3:::${MyS3Bucket}/*"
-            Condition:
-              StringEquals:
-                "aws:SourceAccount": !Ref AWS::AccountId
-              ArnLike:
-                "aws:SourceArn": !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${ConnectInstanceId}"
-
   # IAM role for the Lambda function to execute
   LambdaExecutionRole:
     Type: AWS::IAM::Role
@@ -95,27 +72,10 @@ Resources:
                   - "sns:Publish"
                 Resource: "arn:aws:sns:*:*:*"
 
-        - PolicyName: LambdaS3Policy
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: "Allow"
-                Action:
-                  - "s3:GetObject"
-                  - "s3:PutObject"
-                  - "s3:ListBucket"
-                Resource:
-                  - !Sub "arn:aws:s3:::${MyS3Bucket}"
-                  - !Sub "arn:aws:s3:::${MyS3Bucket}/*"
-
         - PolicyName: LambdaPollyConnectPolicy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
-              - Effect: "Allow"
-                Action:
-                  - "polly:SynthesizeSpeech"
-                Resource: "*"
               - Effect: "Allow"
                 Action:
                   - "connect:StartOutboundVoiceContact"
@@ -149,7 +109,6 @@ Resources:
 
           import json
           import boto3
-          import time
           import os
 
           def lambda_handler(event, context):
@@ -192,29 +151,7 @@ Resources:
                   f"Please take action, thank you!"
               )
               
-              polly_client = boto3.client('polly')
-              
-              response = polly_client.synthesize_speech(
-                  Text=message_spoken,
-                  OutputFormat='mp3',
-                  VoiceId='Joanna'
-              )
-              
-              mp3_file_path = '/tmp/output.mp3'
-              with open('/tmp/output.mp3', 'wb') as file:
-                  file.write(response['AudioStream'].read())
-              
-              # Upload the mp3 file to a S3 bucket
-              s3_client = boto3.client('s3')
-              bucket_name = os.environ['S3_BUCKET_NAME']
-              s3_key = 'output.mp3'
-              s3_client.upload_file(mp3_file_path, bucket_name, s3_key)
-
-              time.sleep(30)  
-              
               connect_client = boto3.client('connect')
-              
-              s3_url = f"https://s3.amazonaws.com/{bucket_name}/{s3_key}"
 
               # These are environment variables for Amazon Connect
               destination_phone_number = os.environ['DESTINATION_PHONE_NUMBER']
@@ -229,9 +166,11 @@ Resources:
                   InstanceId=instance_id, 
                   SourcePhoneNumber=source_phone_number,      
                   Attributes={
-                      's3AudioUrl': s3_url
+                      'messageToRead': message_spoken
                   }
               )
+              
+              print(response)
               
               return {
                   'statusCode': 200,
@@ -250,7 +189,6 @@ Resources:
       Environment:
         Variables:
           SNS_TOPIC_ARN: !Ref MySNSTopic
-          S3_BUCKET_NAME: !Ref MyS3Bucket
           DESTINATION_PHONE_NUMBER: !Ref SecurityPhoneNumber
           CONTACT_FLOW_ID: !Ref ContactFlowId
           INSTANCE_ID: !Ref ConnectInstanceId
@@ -285,10 +223,5 @@ Resources:
         - Arn: !GetAtt MyLambdaFunction.Arn
           Id: "MyLambdaFunctionTarget"
 
-
-Outputs:
-  MyS3Bucket:
-    Description: The name of the S3 bucket.
-    Value: !Ref MyS3Bucket
 
 
