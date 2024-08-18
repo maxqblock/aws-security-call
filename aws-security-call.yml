@@ -60,7 +60,7 @@ Resources:
               StringEquals:
                 "aws:SourceAccount": !Ref AWS::AccountId
               ArnLike:
-                "aws:SourceArn": !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${ConnectInstance}"
+                "aws:SourceArn": !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${ConnectInstanceId}"
 
   # Create an IAM role for the Lambda function
   LambdaExecutionRole:
