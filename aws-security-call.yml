@@ -1,3 +1,7 @@
+# Copyright (c) 2024 Maxwell Block
+# This code is licensed under the MIT License.
+# See the LICENSE file in the project root for license terms.
+
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   CloudFormation template to create resources for processing GuardDuty alerts with notifications via SNS, and calls via Amazon Connect.
