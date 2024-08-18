@@ -55,7 +55,7 @@ Resources:
             Principal:
               Service: "connect.amazonaws.com"
             Action: "s3:GetObject"
-            Resource: !Sub "arn:aws:s3:::${S3BucketName}/*"
+            Resource: !Sub "arn:aws:s3:::${MyS3Bucket}/*"
             Condition:
               StringEquals:
                 "aws:SourceAccount": !Ref AWS::AccountId
@@ -106,8 +106,8 @@ Resources:
                   - "s3:PutObject"
                   - "s3:ListBucket"
                 Resource:
-                  - "arn:aws:s3:::${S3BucketName}"
-                  - "arn:aws:s3:::${S3BucketName}/*"
+                  - "arn:aws:s3:::${MyS3Bucket}"
+                  - "arn:aws:s3:::${MyS3Bucket}/*"
         - PolicyName: LambdaPollyConnectPolicy
           PolicyDocument:
             Version: "2012-10-17"
@@ -249,7 +249,7 @@ Resources:
       Environment:
         Variables:
           SNS_TOPIC_ARN: !Ref MySNSTopic
-          S3_BUCKET_NAME: !Ref S3BucketName
+          S3_BUCKET_NAME: !Ref MyS3Bucket
           DESTINATION_PHONE_NUMBER: !Ref SecurityPhoneNumber
           CONTACT_FLOW_ID: !Ref ContactFlowId
           INSTANCE_ID: !Ref ConnectInstanceId
@@ -286,7 +286,7 @@ Resources:
 
 
 Outputs:
-  S3BucketName:
+  MyS3Bucket:
     Description: The name of the S3 bucket.
     Value: !Ref MyS3Bucket
 
