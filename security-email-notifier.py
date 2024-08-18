@@ -15,7 +15,7 @@ def lambda_handler(event, context):
     event_time = event.get('detail', {}).get('updatedAt', 'N/A')
     
     # This is the message sent to emails
-    message = (
+    message = ( #MODIFY THIS TO CHANGE THE EMAIL NOTIFICATION MESSAGE
         f"GuardDuty Alert\n\n"
         f"Account ID: {account_id}\n"
         f"Region: {region}\n"
@@ -31,7 +31,7 @@ def lambda_handler(event, context):
     response = sns_client.publish(
         TopicArn=sns_topic_arn,
         Message=message,
-        Subject='IMPORTANT GuardDuty Alert'
+        Subject='IMPORTANT GuardDuty Alert' #MODIFY THIS TO CHANGE THE EMAIL NOTIFICATION SUBJECT
     )
     
     print("Message sent to SNS")
@@ -39,8 +39,8 @@ def lambda_handler(event, context):
     # Converts the AWS account ID to be read off as a string 
     account_id_words = convert_number_to_words(account_id)
     
-    # This is the spoken message read off in the call
-    message_spoken = (
+    # This is the spoken message read off in the call.
+    message_spoken = ( #MODIFY THIS MESSAGE TO CHANGE WHAT IS SAID ON THE CALL
         f"Hello, this is AWS notifying you of an important GuardDuty alert impacting your AWS environment. "
         f"In {account_id_words} within the {region} region, we have detected {title}. "
         f"Please take action and check your AWS environment for more details, thank you!"
