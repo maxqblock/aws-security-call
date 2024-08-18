@@ -4,21 +4,19 @@
 
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  CloudFormation template to create resources for processing GuardDuty alerts with notifications via SNS, and calls via Amazon Connect.
+  CloudFormation template to create resources for processing GuardDuty alerts with email notifications via SNS, and calls through Amazon Connect.
 
+# The user will be prompted for these parameters before creating the stack
 Parameters:
-  DestinationPhoneNumber:
+  SecurityPhoneNumber:
     Type: String
     Description: The phone number to call via Amazon Connect.
   ContactFlowId:
     Type: String
     Description: The Contact Flow ID for Amazon Connect.
-  SourcePhoneNumber:
+  ConnectPhoneNumber:
     Type: String
     Description: The source phone number for Amazon Connect.
-  S3BucketName:
-    Type: String
-    Description: The name of the S3 bucket to store the MP3 files (make sure it is globally unique).
   EmailAddress:
     Type: String
     Description: The email address to receive SNS notifications.
@@ -27,13 +25,13 @@ Parameters:
     Description: The ID of the Amazon Connect instance.
 
 Resources:
-  # Create an SNS Topic
+  # SNS Topic
   MySNSTopic:
     Type: AWS::SNS::Topic
     Properties:
       DisplayName: GuardDuty Alerts
 
-  # Subscribe an email to the SNS Topic
+  # Subscription for an email to the SNS Topic
   MySNSSubscription:
     Type: AWS::SNS::Subscription
     Properties:
@@ -41,11 +39,9 @@ Resources:
       Protocol: email
       Endpoint: !Ref EmailAddress
 
-  # Create an S3 bucket to store MP3 files
+  # S3 bucket to store MP3 files used in call
   MyS3Bucket:
     Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Ref S3BucketName
 
   MyS3BucketPolicy:
     Type: AWS::S3::BucketPolicy
@@ -66,7 +62,7 @@ Resources:
               ArnLike:
                 "aws:SourceArn": !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${ConnectInstanceId}"
 
-  # Create an IAM role for the Lambda function
+  # IAM role for the Lambda function to execute
   LambdaExecutionRole:
     Type: AWS::IAM::Role
     Properties:
@@ -136,7 +132,7 @@ Resources:
                 Resource: 
                   - "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/connect/*"
 
-  # Create the Lambda function
+  # Lambda function creation with the proper environment variables
   MyLambdaFunction:
     Type: AWS::Lambda::Function
     Properties:
@@ -254,13 +250,13 @@ Resources:
         Variables:
           SNS_TOPIC_ARN: !Ref MySNSTopic
           S3_BUCKET_NAME: !Ref S3BucketName
-          DESTINATION_PHONE_NUMBER: !Ref DestinationPhoneNumber
+          DESTINATION_PHONE_NUMBER: !Ref SecurityPhoneNumber
           CONTACT_FLOW_ID: !Ref ContactFlowId
           INSTANCE_ID: !Ref ConnectInstanceId
-          SOURCE_PHONE_NUMBER: !Ref SourcePhoneNumber
+          SOURCE_PHONE_NUMBER: !Ref ConnectPhoneNumber
           EMAIL_ADDRESS: !Ref EmailAddress
 
-  # Grant EventBridge permission to invoke the Lambda function
+  # Allowing EventBridge permissions to invoke the Lambda
   LambdaInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -269,7 +265,7 @@ Resources:
       Principal: "events.amazonaws.com"
       SourceArn: !GetAtt MyEventBridgeRule.Arn
 
-  # Create an EventBridge rule
+  # EventBridge Rule for specific severity GuardDuty findings
   MyEventBridgeRule:
     Type: AWS::Events::Rule
     Properties:
@@ -290,15 +286,8 @@ Resources:
 
 
 Outputs:
-  SNSArn:
-    Description: The ARN of the SNS topic.
-    Value: !Ref MySNSTopic
-
   S3BucketName:
     Description: The name of the S3 bucket.
     Value: !Ref MyS3Bucket
 
-  LambdaFunctionArn:
-    Description: The ARN of the Lambda function.
-    Value: !GetAtt MyLambdaFunction.Arn
 
