@@ -81,13 +81,13 @@ Resources:
               - Effect: "Allow"
                 Action: 
                   - "logs:CreateLogGroup"
-                Resource: "arn:aws:logs:us-east-1:572230724960:*"
+                Resource: "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:*"
               - Effect: "Allow"
                 Action:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: 
-                  - !Sub "arn:aws:logs:us-east-1:572230724960:log-group:/aws/lambda/${AWS::StackName}:*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}:*"
         - PolicyName: LambdaSNSPolicy
           PolicyDocument:
             Version: "2012-10-17"
@@ -106,8 +106,8 @@ Resources:
                   - "s3:PutObject"
                   - "s3:ListBucket"
                 Resource:
-                  - "arn:aws:s3:::testmqb123"
-                  - "arn:aws:s3:::testmqb123/*"
+                  - "arn:aws:s3:::${S3BucketName}"
+                  - "arn:aws:s3:::${S3BucketName}/*"
         - PolicyName: LambdaPollyConnectPolicy
           PolicyDocument:
             Version: "2012-10-17"
@@ -130,7 +130,7 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: 
-                  - "arn:aws:logs:us-east-1:572230724960:log-group:/aws/connect/*"
+                  - "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/connect/*"
 
   # Create the Lambda function
   MyLambdaFunction:
