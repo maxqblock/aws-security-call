@@ -16,12 +16,12 @@ def lambda_handler(event, context):
     
     # This is the message sent to emails
     message = (
-        "GuardDuty Alert\n\n"
-        "Account ID: " + account_id + "\n"
-        "Region: " + region + "\n"
-        "Title: " + title + "\n"
-        "Type: " + finding_type + "\n"
-        "Updated At: " + event_time + "\n"
+        f"GuardDuty Alert\n\n"
+        f"Account ID: {account_id}\n"
+        f"Region: {region}\n"
+        f"Title: {title}\n"
+        f"Type: {finding_type}\n"
+        f"Updated At: {event_time}\n"
     )
     
     sns_client = boto3.client('sns')
@@ -31,19 +31,19 @@ def lambda_handler(event, context):
     response = sns_client.publish(
         TopicArn=sns_topic_arn,
         Message=message,
-        Subject='GuardDuty Alert'
+        Subject='IMPORTANT GuardDuty Alert'
     )
     
-    print("Message sent to SNS:")
+    print("Message sent to SNS")
 
     # Converts the AWS account ID to be read off as a string 
     account_id_words = convert_number_to_words(account_id)
     
     # This is the spoken message read off in the call
     message_spoken = (
-        f"Hello, this is AWS notifying you of a critical GuardDuty alert impacting your AWS environment. "
+        f"Hello, this is AWS notifying you of an important GuardDuty alert impacting your AWS environment. "
         f"In {account_id_words} within the {region} region, we have detected {title}. "
-        f"Please take action, thank you!"
+        f"Please take action and check your AWS environment for more details, thank you!"
     )
     
     connect_client = boto3.client('connect')

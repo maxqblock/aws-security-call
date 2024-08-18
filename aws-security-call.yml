@@ -4,19 +4,19 @@
 
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  CloudFormation template to create resources for processing GuardDuty alerts with email notifications via SNS, and calls through Amazon Connect.
+  CloudFormation template to create resources for processing GuardDuty alerts with email notifications via SNS and calls through Amazon Connect.
 
 # The user will be prompted for these parameters before creating the stack
 Parameters:
   SecurityPhoneNumber:
     Type: String
-    Description: The security contact phone number to call via Amazon Connect.
+    Description: The security contact phone number that will be called.
   ContactFlowId:
     Type: String
-    Description: The Contact Flow ID for Amazon Connect.
+    Description: The Contact Flow ID from Amazon Connect.
   ConnectPhoneNumber:
     Type: String
-    Description: The source phone number for Amazon Connect.
+    Description: The source phone number from Amazon Connect.
   EmailAddress:
     Type: String
     Description: The security contact email address to receive SNS notifications.
@@ -51,7 +51,7 @@ Resources:
               Service: "lambda.amazonaws.com"
             Action: "sts:AssumeRole"
       Policies:
-        - PolicyName: LambdaLogsPolicy
+        - PolicyName: GuardDutyLambdaLogsPolicy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -61,18 +61,18 @@ Resources:
                   - "logs:CreateLogStream"
                   - "logs:PutLogEvents"
                 Resource: 
-                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${AWS::StackName}:*"
+                  - !Sub "arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/${MyLambdaFunction}:*"
 
-        - PolicyName: LambdaSNSPolicy
+        - PolicyName: GuardDutyLambdaSNSPolicy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: "Allow"
                 Action:
                   - "sns:Publish"
-                Resource: "arn:aws:sns:*:*:*"
+                Resource: !GetAtt MySNSTopic.Arn
 
-        - PolicyName: LambdaPollyConnectPolicy
+        - PolicyName: GuardDutyLambdaConnectPolicy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -83,8 +83,8 @@ Resources:
                   - "connect:ListInstances"
                   - "connect:DescribeInstance"
                   - "connect:GetContactAttributes"
-                Resource: "*"
-              - Effect: "Allow"
+                Resource: 
+                  - !Sub "arn:aws:connect:${AWS::Region}:${AWS::AccountId}:instance/${ConnectInstanceId}/*"
                 Action:
                   - "logs:CreateLogGroup"
                   - "logs:CreateLogStream"
@@ -121,12 +121,12 @@ Resources:
               
               # This is the message sent to emails
               message = (
-                  "GuardDuty Alert\n\n"
-                  "Account ID: " + account_id + "\n"
-                  "Region: " + region + "\n"
-                  "Title: " + title + "\n"
-                  "Type: " + finding_type + "\n"
-                  "Updated At: " + event_time + "\n"
+                  f"GuardDuty Alert\n\n"
+                  f"Account ID: {account_id}\n"
+                  f"Region: {region}\n"
+                  f"Title: {title}\n"
+                  f"Type: {finding_type}\n"
+                  f"Updated At: {event_time}\n"
               )
               
               sns_client = boto3.client('sns')
@@ -136,19 +136,19 @@ Resources:
               response = sns_client.publish(
                   TopicArn=sns_topic_arn,
                   Message=message,
-                  Subject='GuardDuty Alert'
+                  Subject='IMPORTANT GuardDuty Alert'
               )
               
-              print("Message sent to SNS:")
+              print("Message sent to SNS")
 
               # Converts the AWS account ID to be read off as a string 
               account_id_words = convert_number_to_words(account_id)
               
               # This is the spoken message read off in the call
               message_spoken = (
-                  f"Hello, this is AWS notifying you of a critical GuardDuty alert impacting your AWS environment. "
+                  f"Hello, this is AWS notifying you of an important GuardDuty alert impacting your AWS environment. "
                   f"In {account_id_words} within the {region} region, we have detected {title}. "
-                  f"Please take action, thank you!"
+                  f"Please take action and check your AWS environment for more details, thank you!"
               )
               
               connect_client = boto3.client('connect')
