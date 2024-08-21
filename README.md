@@ -14,4 +14,4 @@ Verify that GuardDuty is enabled in the region this solution will be deployed to
 
 ### 2. Enable Amazon Connect
 
-While most of this solution is deployed through infrastructure as code, Amazon Connect needs to be enabled manually.
+While most of this solution is deployed through infrastructure as code, Amazon Connect needs to be enabled manually. Setup an Amazon Connect instance, contact flow with outbound access, and associate a phone number with this flow. Take note of the Connect instance ID, contact flow ID, and phone number as they are needed when deploying the IAC. These are parameters in the CloudFormation YAML template provided.
